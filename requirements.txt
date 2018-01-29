@@ -2,6 +2,7 @@ Flask
 Flask-Assets
 Logbook
 beautifulsoup4
+chardet
 cssmin
 cssprefixer
 cssutils
