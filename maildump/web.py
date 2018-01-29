@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, url_for, send_file, abort
 from flask_assets import Environment, Bundle
 from logbook import Logger
 
+import chardet
 import maildump
 from maildump import db
 from maildump.util import rest, bool_arg, CSSPrefixer, get_version
@@ -97,12 +98,34 @@ def _part_url(part):
     return url_for('get_message_part', message_id=part['message_id'], cid=part['cid'])
 
 
+def _encode_body(body, charset):
+    # Use declared charset
+    decoded = None
+    try:
+        decoded = body.decode(charset)
+    except UnicodeError:
+        pass
+    if decoded is None:
+        # Try to guess the charset, if failed
+        guess = chardet.detect(body)
+        encoding = guess['encoding']
+        if encoding is None:
+            abort('Failed to decode body')
+        try:
+            decoded = body.decode(guess['encoding'])
+            log.info('Declared charset {} when used {}'.format(charset, encoding))
+            charset = encoding
+        except UnicodeError:
+            abort('Failed to decode body with encodings: {}, {}'.format(charset, encoding))
+    return decoded.encode('utf-8'), charset
+
+
 def _part_response(part, body=None, charset=None):
     charset = charset or part['charset'] or 'utf-8'
     if body is None:
         body = part['body']
     if charset != 'utf-8':
-        body = body.decode(charset).encode('utf-8')
+        body, charset = _encode_body(body, charset)
     io = StringIO(body)
     io.seek(0)
     response = send_file(io, part['type'], part['is_attachment'], part['filename'])
@@ -160,7 +183,7 @@ def get_message_html(message_id):
     if not part:
         return 404, 'part does not exist'
     charset = part['charset'] or 'utf-8'
-    soup = bs4.BeautifulSoup(part['body'].decode(charset), 'html5lib')
+    soup = bs4.BeautifulSoup(_encode_body(part['body'], charset)[0], 'html5lib')
     _fix_cid_links(soup, message_id)
     return _part_response(part, str(soup), 'utf-8')
 
