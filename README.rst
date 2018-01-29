@@ -7,6 +7,36 @@ without actual emails being sent to anyone. Additionally lazy developers
 might prefer this over a real SMTP server simply for the sake of it
 being much easier and faster to set up.
 
+Installation
+------------
+
+As with just about any python application, we recommend creating a new virtualenvironment before proceeding with the following steps. If you don't already have this set up, the easiest way to get `virtualenv` and `virtualenvwrapper` set up is via `virtualenv-burrito <https://github.com/brainsik/virtualenv-burrito>`_.
+
+Once inside your virtualenvironment, here's how to get maildump up and running:
+
+1. `git clone https://github.com/ThiefMaster/maildump.git`
+2. `cd maildump`
+3. `pip install -r requirements.txt`
+4. `python setup.py build`
+5. `python setup.py install`
+6. `maildump`
+
+Point your application's SMTP settings to port 1025 on EMAIL_HOST = '127.0.0.1'
+
+If you are using Django, you can add these settings to your settings.py file::
+
+    if DEBUG:
+        EMAIL_HOST = '127.0.0.1'
+        EMAIL_PORT = 1025
+        EMAIL_HOST_USER = ''
+        EMAIL_HOST_PASSWORD = ''
+        EMAIL_USE_TLS = False
+
+Usage
+-----
+
+Open your web browser and go to http://127.0.0.1:1080
+
 Features
 --------
 
